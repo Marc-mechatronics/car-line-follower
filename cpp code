@@ -1,0 +1,120 @@
+// --- PIN DEFINITIONS ---
+// IR Sensors
+const int irLeft = 2;
+const int irRight = 3;
+
+// Motor A (Left Side Motors)
+const int enA = 9;   // Enable Pin for speed control
+const int in1 = 4;
+const int in2 = 5;
+
+// Motor B (Right Side Motors)
+const int enB = 10;  // Enable Pin for speed control
+const int in3 = 6;
+const int in4 = 7;
+
+// --- SETTINGS ---
+int motorSpeed = 80; // Speed range: 0 to 255. 
+// If your car moves too fast and falls off the line, lower this number.
+// If it doesn't have enough power to move, increase this number.
+
+void setup() {
+  // Set Input Pins
+  pinMode(irLeft, INPUT);
+  pinMode(irRight, INPUT);
+
+  // Set Output Pins
+  pinMode(enA, OUTPUT);
+  pinMode(in1, OUTPUT);
+  pinMode(in2, OUTPUT);
+  pinMode(enB, OUTPUT);
+  pinMode(in3, OUTPUT);
+  pinMode(in4, OUTPUT);
+
+  // Start serial communication for debugging
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Read Sensor Values
+  // Note: Depending on your sensor, BLACK might be HIGH(1) or LOW(0).
+  // This code assumes: BLACK = HIGH (1), WHITE = LOW (0)
+  int leftStatus = digitalRead(irLeft);
+  int rightStatus = digitalRead(irRight);
+
+  // Debugging (Open Serial Monitor to see what sensors see)
+  Serial.print("Left: ");
+  Serial.print(leftStatus);
+  Serial.print(" | Right: ");
+  Serial.println(rightStatus);
+
+  // --- LOGIC ---
+
+  // 1. FORWARD: Both sensors see White (0, 0)
+  if (leftStatus == LOW && rightStatus == LOW) {
+    moveForward();
+  }
+  // 2. TURN RIGHT: Left sees White (0), Right sees Black (1)
+  else if (leftStatus == LOW && rightStatus == HIGH) {
+    turnRight();
+  }
+  // 3. TURN LEFT: Left sees Black (1), Right sees White (0)
+  else if (leftStatus == HIGH && rightStatus == LOW) {
+    turnLeft();
+  }
+  // 4. STOP: Both see Black (1, 1)
+  else if (leftStatus == HIGH && rightStatus == HIGH) {
+    stopCar();
+  }
+}
+
+// --- MOVEMENT FUNCTIONS ---
+
+void moveForward() {
+  // Left Motor Forward
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  analogWrite(enA, motorSpeed);
+
+  // Right Motor Forward
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+  analogWrite(enB, motorSpeed);
+}
+
+void turnLeft() {
+  // To turn left sharply: Left Motor Backward (or Stop), Right Motor Forward
+  
+  // Left Motor Stop/Back
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW); // Change in2 to HIGH for sharper turn (tank turn)
+  analogWrite(enA, motorSpeed);
+
+  // Right Motor Forward
+  digitalWrite(in3, HIGH);
+  digitalWrite(in4, LOW);
+  analogWrite(enB, motorSpeed);
+}
+
+void turnRight() {
+  // To turn right sharply: Right Motor Backward (or Stop), Left Motor Forward
+  
+  // Left Motor Forward
+  digitalWrite(in1, HIGH);
+  digitalWrite(in2, LOW);
+  analogWrite(enA, motorSpeed);
+
+  // Right Motor Stop/Back
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW); // Change in4 to HIGH for sharper turn (tank turn)
+  analogWrite(enB, motorSpeed);
+}
+
+void stopCar() {
+  digitalWrite(in1, LOW);
+  digitalWrite(in2, LOW);
+  digitalWrite(in3, LOW);
+  digitalWrite(in4, LOW);
+  analogWrite(enA, 0);
+  analogWrite(enB, 0);
+}
